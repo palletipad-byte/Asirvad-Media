@@ -106,4 +106,4 @@ else:
 # Footer
 st.markdown("---")
 st.markdown("**Created with ❤️ by ఆశీర్వాదం | Powered by Google Gemini API**")
-        
+            
