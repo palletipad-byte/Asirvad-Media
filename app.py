@@ -16,6 +16,7 @@ st.set_page_config(
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
+    # మోడల్ నేమ్ సరిగ్గా సెట్ చేయడం
     model = genai.GenerativeModel('gemini-1.5-flash')
     api_ready = True
 except Exception as e:
@@ -28,7 +29,7 @@ st.write("స్టోరీలు, ఫోటో విశ్లేషణలు 
 if not api_ready:
     st.error("⚠️ Streamlit Secrets లో `GEMINI_API_KEY` సెట్ చేయబడి లేదు. దయచేసి సెట్టింగ్స్‌లో దీన్ని యాడ్ చేయండి.")
 else:
-    # Sidebar Menu with Feature 1 and Feature 2
+    # Sidebar Menu
     st.sidebar.title("🌟 ఆశీర్వాద్ మెనూ")
     feature_choice = st.sidebar.selectbox("ఫ్యూచర్ ఎంచుకోండి:", [
         "🏠 హోమ్ & డ్యాష్‌బోర్డ్",
@@ -67,7 +68,7 @@ else:
             image = Image.open(uploaded_file)
             st.image(image, caption="అప్‌లోడ్ చేసిన ఇమేజ్", use_column_width=True)
             
-            user_query = st.text_input("ఈ ఫోటో గురించి AI ని ఏమి అడగాలనుకుంటున్నారు?")
+            user_query = st.text_input("ఈ ఫోటో గురించి AI ని ఏమి అడగాలనుకుంటున్నారు? (ఉదా: ఈ డిజైన్ గురించి వివరించండి)")
             
             if st.button("విజువల్ విశ్లేషించు"):
                 if user_query:
@@ -79,7 +80,7 @@ else:
                         except Exception as e:
                             st.error(f"ఎర్రర్ ఏర్పడింది: {e}")
                 else:
-                    st.warning("దయచేసి ప్రశ్న ఇవ్వండి.")
+                    st.warning("దయచేసి సరైన ప్రశ్న ఇవ్వండి.")
 
     elif feature_choice == "🎙️ Feature 3: వాయిస్ ఓవర్ & ఆడియో":
         st.subheader("🎙️ టెక్స్ట్ నుండి వాయిస్ ఓవర్ (TTS)")
@@ -105,4 +106,4 @@ else:
 # Footer
 st.markdown("---")
 st.markdown("**Created with ❤️ by ఆశీర్వాదం | Powered by Google Gemini API**")
-
+        
