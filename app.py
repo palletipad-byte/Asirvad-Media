@@ -5,9 +5,9 @@ from gtts import gTTS
 import os
 import tempfile
 
-# Page Configuration
+# 1. Page Configuration (ఇది ఎప్పుడూ మొదటి లైన్లోనే ఉండాలి)
 st.set_page_config(
-    page_title="Asirvad-Media",
+    page_title="ఆశీర్వాద్ AI - మల్టీమీడియా స్టూడియో",
     page_icon="🎬",
     layout="wide"
 )
@@ -16,22 +16,33 @@ st.set_page_config(
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-pro')
+    model = genai.GenerativeModel('gemini-1.5-flash')
     api_ready = True
 except Exception as e:
     api_ready = False
 
-st.title("🎬 ఆశీర్వాద్ AI - మల్టీమీడియా క్రియేటర్")
-st.write("స్టోరీలు, వాయిస్ ఓవర్స్ మరియు కంటెంట్‌ను ఇక్కడ నేరుగా క్రియేట్ చేసుకోండి.")
+# App Header
+st.title("🎬 ఆశీర్వాద్ AI - ఆల్-ఇన్-వన్ మల్టీమీడియా స్టూడియో")
+st.write("స్టోరీలు, ఫోటో విశ్లేషణలు మరియు వాయిస్ ఓవర్లను సులభంగా సృష్టించుకోండి.")
 
 if not api_ready:
     st.error("⚠️ Streamlit Secrets లో `GEMINI_API_KEY` సెట్ చేయబడి లేదు. దయచేసి సెట్టింగ్స్‌లో దీన్ని యాడ్ చేయండి.")
 else:
-    # Tabs for different features
-    tab1, tab2, tab3 = st.tabs(["📝 AI స్టోరీస్", "🎙️️ వాయిస్ ఓవర్ (TTS)", "ℹ️ గురించి"])
+    # Sidebar Menu with Feature 1 and Feature 2
+    st.sidebar.title("🌟 ఆశీర్వాద్ మెనూ")
+    feature_choice = st.sidebar.selectbox("ఫ్యూచర్ ఎంచుకోండి:", [
+        "🏠 హోమ్ & డ్యాష్‌బోర్డ్",
+        "📝 Feature 1: AI స్టోరీస్ & స్క్రిప్ట్స్", 
+        "🖼️ Feature 2: Google Flow విజువల్ స్టూడియో", 
+        "🎙️ Feature 3: వాయిస్ ఓవర్ & ఆడియో"
+    ])
 
-    with tab1:
-        st.subheader("క్రియేటివ్ స్టోరీ మరియు స్క్రిప్ట్ జనరేటర్")
+    if feature_choice == "🏠 హోమ్ & డ్యాష్‌బోర్డ్":
+        st.subheader("స్వాగతం, ఆశీర్వాదం గారు! 🙏")
+        st.info("మీ ప్రాజెక్ట్‌ల కోసం అన్ని మల్టీమీడియా ఫీచర్లు ఇక్కడ అందుబాటులో ఉన్నాయి.")
+
+    elif feature_choice == "📝 Feature 1: AI స్టోరీస్ & స్క్రిప్ట్స్":
+        st.subheader("📝 క్రియేటివ్ స్టోరీ మరియు స్క్రిప్ట్ జనరేటర్")
         prompt = st.text_area("మీకు కావలసిన టాపిక్ లేదా ఐడియా ఇక్కడ రాయండి:")
         
         if st.button("స్టోరీ జనరేట్ చేయు"):
@@ -44,12 +55,36 @@ else:
                     except Exception as e:
                         st.error(f"ఎర్రర్ ఏర్పడింది: {e}")
             else:
-                st.warning("దయచేసి ఏదെങ്കിലും టెక్స్ట్ రాయండి.")
+                st.warning("దయచేసి ఏదైనా టెక్స్ట్ రాయండి.")
 
-    with tab2:
-        st.subheader("టెక్స్ట్ నుండి వాయిస్ ఓవర్ (gTTS)")
+    elif feature_choice == "🖼️ Feature 2: Google Flow విజువల్ స్టూడియో":
+        st.subheader("🖼️ Google Flow స్టైల్ ఫోటో & విజువల్ అనాలిసిస్")
+        st.write("మీ ఫోటోలను అప్‌లోడ్ చేసి వాటిపై AI సహాయంతో విశ్లేషణ చేయండి మరియు స్క్రిప్ట్స్ తయారు చేసుకోండి.")
+        
+        uploaded_file = st.file_uploader("ఫోటో అప్‌లోడ్ చేయండి:", type=["jpg", "jpeg", "png"])
+        
+        if uploaded_file is not None:
+            image = Image.open(uploaded_file)
+            st.image(image, caption="అప్‌లోడ్ చేసిన ఇమేజ్", use_column_width=True)
+            
+            user_query = st.text_input("ఈ ఫోటో గురించి AI ని ఏమి అడగాలనుకుంటున్నారు?")
+            
+            if st.button("విజువల్ విశ్లేషించు"):
+                if user_query:
+                    with st.spinner("విశ్లేషిస్తోంది..."):
+                        try:
+                            response = model.generate_content([image, user_query])
+                            st.success("విశ్లేషణ పూర్తి!")
+                            st.write(response.text)
+                        except Exception as e:
+                            st.error(f"ఎర్రర్ ఏర్పడింది: {e}")
+                else:
+                    st.warning("దయచేసి ప్రశ్న ఇవ్వండి.")
+
+    elif feature_choice == "🎙️ Feature 3: వాయిస్ ఓవర్ & ఆడియో":
+        st.subheader("🎙️ టెక్స్ట్ నుండి వాయిస్ ఓవర్ (TTS)")
         tts_text = st.text_area("ఆడియోగా మార్చవలసిన టెక్స్ట్ ఇక్కడ రాయండి:")
-        lang_choice = st.selectbox("భాషను ఎంచుకోండి (Language):", ["te", "en", "hi"])
+        lang_choice = st.selectbox("భాషను ఎంచుకోండి:", ["te", "en", "hi"])
 
         if st.button("వాయిస్ క్రియేట్ చేయు"):
             if tts_text:
@@ -67,8 +102,7 @@ else:
             else:
                 st.warning("దయచేసి టెక్స్ట్ ఎంటర్ చేయండి.")
 
-    with tab3:
-        st.subheader("ఆశీర్వాద్ మీడియా గురించి")
-        st.write("ఈ అప్లికేషన్ సృష్టికర్తలు మరియు డెవలపర్ల కోసం ప్రత్యేకంగా రూపొందించబడింది.")
-        st.markdown("**Created with ❤️️ by ఆశీర్వాదం**")
-                        
+# Footer
+st.markdown("---")
+st.markdown("**Created with ❤️ by ఆశీర్వాదం | Powered by Google Gemini API**")
+
