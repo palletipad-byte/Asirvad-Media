@@ -1,4 +1,3 @@
-
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
@@ -13,28 +12,23 @@ st.set_page_config(
     layout="wide"
 )
 
-# Sidebar for API Key and Navigation
-st.sidebar.title("🌟 ఆశీర్వాద్ మీడియా (Asirvad-Media)")
-st.sidebar.markdown("---")
-
-api_key = st.sidebar.text_input("Enter Google Gemini API Key:", type="password")
-
-if api_key:
+# Initialize Gemini API using Streamlit Secrets
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel('gemini-1.5-pro')
+    api_ready = True
+except Exception as e:
+    api_ready = False
 
-st.sidebar.markdown("---")
-st.sidebar.info("మల్టీమీడియా AI కంటెంట్ క్రియేషన్ ప్లాట్‌ఫారమ్.")
-
-# Main App Title
 st.title("🎬 ఆశీర్వాద్ AI - మల్టీమీడియా క్రియేటర్")
-st.write("స్టోరీలు, వాయిస్ ఓవర్స్ మరియు కంటెంట్‌ను ఇక్కడ సులభంగా క్రియేట్ చేసుకోండి.")
+st.write("స్టోరీలు, వాయిస్ ఓవర్స్ మరియు కంటెంట్‌ను ఇక్కడ నేరుగా క్రియేట్ చేసుకోండి.")
 
-if not api_key:
-    st.warning("దయచేసి మీ Google Gemini API Key ని సైడ్‌బార్‌లో ఎంటర్ చేయండి.")
+if not api_ready:
+    st.error("⚠️ Streamlit Secrets లో `GEMINI_API_KEY` సెట్ చేయబడి లేదు. దయచేసి సెట్టింగ్స్‌లో దీన్ని యాడ్ చేయండి.")
 else:
     # Tabs for different features
-    tab1, tab2, tab3 = st.tabs(["📝 AI స్టోరీస్", "🎙️ వాయిస్ ఓవర్ (TTS)", "ℹ️ గురించి"])
+    tab1, tab2, tab3 = st.tabs(["📝 AI స్టోరీస్", "🎙️️ వాయిస్ ఓవర్ (TTS)", "ℹ️ గురించి"])
 
     with tab1:
         st.subheader("క్రియేటివ్ స్టోరీ మరియు స్క్రిప్ట్ జనరేటర్")
@@ -76,5 +70,5 @@ else:
     with tab3:
         st.subheader("ఆశీర్వాద్ మీడియా గురించి")
         st.write("ఈ అప్లికేషన్ సృష్టికర్తలు మరియు డెవలపర్ల కోసం ప్రత్యేకంగా రూపొందించబడింది.")
-        st.markdown("**Created with ❤️ by ఆశీర్వాదం**")
-        
+        st.markdown("**Created with ❤️️ by ఆశీర్వాదం**")
+                        
