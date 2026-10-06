@@ -20,16 +20,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Streamlit Secrets నుండి నేరుగా API కీ కాన్ఫిగర్ చేయడం
-try:
-    api_key = st.secrets["GEMINI_API_KEY"]
-    genai.configure(api_key=api_key)
-    # మోడల్ నేమ్‌ను 'gemini-pro' కి మార్చడం ద్వారా 404 ఎర్రర్ రాకుండా పరిష్కరించబడింది
-    model = genai.GenerativeModel("gemini-pro")
-    api_ready = True
-except Exception as e:
-    api_ready = False
-
 # 2. సైడ్‌బార్ కాన్ఫిగరేషన్ (గూగుల్ ఫ్లో లేఅవుట్ లాగా)
 st.sidebar.title("Google Flow 🎬")
 st.sidebar.caption("AI Creative Studio")
@@ -45,9 +35,21 @@ st.sidebar.write("---")
 st.sidebar.subheader("👤 మీ ప్రొఫైల్")
 st.sidebar.info("🪙 1,050 Google Flow Credits Available")
 
-if not api_ready:
-    st.error("⚠️ Streamlit Secrets లో `GEMINI_API_KEY` సెట్ చేయబడి లేదు. దయచేసి మీ స్ట్రీమ్‌లిట్ సెట్టింగ్స్‌లో సీక్రెట్స్‌ని యాడ్ చేయండి.")
+# సైడ్‌బార్‌లో API కీ ఇన్‌పుట్ బాక్స్ (క్రాష్‌లు రాకుండా సురక్షితమైన పద్ధతి)
+api_key = st.sidebar.text_input("Gemini API Key ఇవ్వండి:", type="password")
+
+if not api_key:
+    st.warning("⚠️ యాప్ రన్ అవ్వడానికి సైడ్‌బార్‌లో మీ Gemini API Key ని ఎంటర్ చేయండి.")
 else:
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-pro")
+        api_ready = True
+    except Exception as e:
+        api_ready = False
+        st.error(f"ఎర్రర్: {e}")
+
+if api_ready:
     # సెషన్ స్టేట్స్ సెటప్
     if "project_step" not in st.session_state:
         st.session_state.project_step = "dashboard"
