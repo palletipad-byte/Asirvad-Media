@@ -5,10 +5,9 @@ from gtts import gTTS
 from moviepy.editor import ImageClip, AudioFileClip
 import os
 
-# 1. పేజీ కాన్ఫిగరేషన్ మరియు గూగుల్ ఫ్లో లాంటి డార్క్ థీమ్ స్టైలింగ్
+# 1. Page Configuration & Dark Theme Styling (Google Flow Look)
 st.set_page_config(page_title="Google Flow - AI Creative Studio", page_icon="🎬", layout="wide")
 
-# కస్టమ్ CSS ద్వారా గూగుల్ ఫ్లో లాంటి డార్క్ స్క్రీన్ డిజైన్ చేయడం
 st.markdown("""
     <style>
     body { background-color: #0F0F0F; color: #FFFFFF; }
@@ -20,12 +19,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 2. సైడ్‌బార్ కాన్ఫిగరేషన్ (గూగుల్ ఫ్లో లేఅవుట్ లాగా)
+# 2. Sidebar Configuration (Google Flow Layout)
 st.sidebar.title("Google Flow 🎬")
 st.sidebar.caption("AI Creative Studio")
 st.sidebar.write("---")
 
-# సైడ్‌బార్ మెనూ ఆప్షన్స్
 menu_choice = st.sidebar.radio(
     "Explore Tools",
     ["📁 All Media", "👤 Characters", "🌄 Scenes", "🛠️ Tools"]
@@ -35,7 +33,6 @@ st.sidebar.write("---")
 st.sidebar.subheader("👤 మీ ప్రొఫైల్")
 st.sidebar.info("🪙 1,050 Google Flow Credits Available")
 
-# సైడ్‌బార్‌లో API కీ ఇన్‌పుట్ బాక్స్ (క్రాష్‌లు రాకుండా సురక్షితమైన పద్ధతి)
 api_key = st.sidebar.text_input("Gemini API Key ఇవ్వండి:", type="password")
 
 if not api_key:
@@ -43,14 +40,14 @@ if not api_key:
 else:
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-pro")
+        # Using the standard modern Gemini model supported by current API versions
+        model = genai.GenerativeModel("gemini-1.5-flash")
         api_ready = True
     except Exception as e:
         api_ready = False
         st.error(f"ఎర్రర్: {e}")
 
-if api_ready:
-    # సెషన్ స్టేట్స్ సెటప్
+if 'api_ready' in locals() and api_ready:
     if "project_step" not in st.session_state:
         st.session_state.project_step = "dashboard"
     if "selected_char" not in st.session_state:
@@ -160,4 +157,4 @@ if api_ready:
                         st.error(f"ఎర్రర్ వచ్చింది: {e}")
             else:
                 st.warning("దయచేసి మీ ప్రాజెక్ట్ కోసం కింద ఉన్న బాక్స్‌లో ఏదైనా ప్రాంప్ట్ టైప్ చేయండి!")
-                        
+        
