@@ -5,7 +5,7 @@ from gtts import gTTS
 from moviepy.editor import ImageClip, AudioFileClip
 import os
 
-# 1. Page Configuration & Dark Theme Styling (Google Flow Look)
+# 1. పేజీ కాన్ఫిగరేషన్ మరియు గూగుల్ ఫ్లో లాంటి డార్క్ థీమ్ స్టైలింగ్
 st.set_page_config(page_title="Google Flow - AI Creative Studio", page_icon="🎬", layout="wide")
 
 st.markdown("""
@@ -19,7 +19,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 2. Sidebar Configuration (Google Flow Layout)
+# 2. సైడ్‌‌బార్ కాన్ఫిగరేషన్
 st.sidebar.title("Google Flow 🎬")
 st.sidebar.caption("AI Creative Studio")
 st.sidebar.write("---")
@@ -40,8 +40,8 @@ if not api_key:
 else:
     try:
         genai.configure(api_key=api_key)
-        # Using the standard modern Gemini model supported by current API versions
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        # ఫోటో విశ్లేషణకు సరిగ్గా సరిపోయే మోడల్
+        model = genai.GenerativeModel("gemini-pro-vision")
         api_ready = True
     except Exception as e:
         api_ready = False
@@ -53,7 +53,6 @@ if 'api_ready' in locals() and api_ready:
     if "selected_char" not in st.session_state:
         st.session_state.selected_char = "None"
 
-    # ==================== DASHBOARD / ALL MEDIA ====================
     if menu_choice == "📁 All Media":
         st.title("📁 My Creations & Dashboard")
         st.write("ఇక్కడ మీ పాత ప్రాజెక్ట్స్ మరియు కొత్త ప్రాజెక్ట్స్ మేనేజ్ చేయవచ్చు.")
@@ -73,7 +72,6 @@ if 'api_ready' in locals() and api_ready:
         with col3:
             st.markdown('<div class="card"><strong>Scene_Audio.mp3</strong><br><p style="color:gray;">Sept 05 - 10:41</p></div>', unsafe_allow_html=True)
 
-    # ==================== CHARACTERS MENU ====================
     elif menu_choice == "👤 Characters":
         st.title("👤 Build & Reuse Characters")
         st.write("వీడియోల కోసం కింద ఉన్న శాంపిల్ క్యారెక్టర్లలో ఒకదానిని ఎంచుకోండి:")
@@ -91,11 +89,9 @@ if 'api_ready' in locals() and api_ready:
             
         st.success(f"ప్రస్తుతం ఎంచుకున్న క్యారెక్టర్: **{st.session_state.selected_char}**")
 
-    # ==================== SCENES / TOOLS (CREATION PROCESS) ====================
     else:
         st.session_state.project_step = "create"
 
-    # ==================== NEW PROJECT CREATION FLOW ====================
     if st.session_state.project_step == "create":
         st.write("---")
         st.title("🎬 AI Creative Studio - Project Flow")
