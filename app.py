@@ -42,7 +42,7 @@ if not api_key:
     st.warning("⚠️ యాప్ రన్ అవ్వడానికి సైడ్‌బార్‌లో మీ Gemini API Key ని ఎంటర్ చేయండి.")
 else:
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-3.8-flash")
 
     # సెషన్ స్టేట్స్ సెటప్
     if "project_step" not in st.session_state:
