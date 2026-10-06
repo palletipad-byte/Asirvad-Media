@@ -20,6 +20,15 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Streamlit Secrets నుండి నేరుగా API కీ కాన్ఫిగర్ చేయడం (యూజర్ కీ టైప్ చేయాల్సిన అవసరం లేదు)
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    api_ready = True
+except Exception as e:
+    api_ready = False
+
 # 2. సైడ్‌బార్ కాన్ఫిగరేషన్ (గూగుల్ ఫ్లో లేఅవుట్ లాగా)
 st.sidebar.title("Google Flow 🎬")
 st.sidebar.caption("AI Creative Studio")
@@ -35,15 +44,9 @@ st.sidebar.write("---")
 st.sidebar.subheader("👤 మీ ప్రొఫైల్")
 st.sidebar.info("🪙 1,050 Google Flow Credits Available")
 
-# సైడ్‌బార్‌లో API కీ ఇన్‌పుట్ బాక్స్ (ఎలాంటి ఎర్రర్స్ రాకుండా పర్ఫెక్ట్ రన్ అవ్వడానికి)
-api_key = st.sidebar.text_input("Gemini API Key ఇవ్వండి:", type="password")
-
-if not api_key:
-    st.warning("⚠️ యాప్ రన్ అవ్వడానికి సైడ్‌బార్‌లో మీ Gemini API Key ని ఎంటర్ చేయండి.")
+if not api_ready:
+    st.error("⚠️ Streamlit Secrets లో `GEMINI_API_KEY` సెట్ చేయబడి లేదు. దయచేసి మీ స్ట్రీమ్‌లిట్ సెట్టింగ్స్‌లో సీక్రెట్స్‌ని యాడ్ చేయండి.")
 else:
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
-
     # సెషన్ స్టేట్స్ సెటప్
     if "project_step" not in st.session_state:
         st.session_state.project_step = "dashboard"
@@ -153,5 +156,5 @@ else:
                     except Exception as e:
                         st.error(f"ఎర్రర్ వచ్చింది: {e}")
             else:
-                st.warning("దయచేసి మీ ప్రాజెక్ట్ కోసం కింద ఉన్న బాక్స్‌‌లో ఏదైనా ప్రాంప్ట్ టైప్ చేయండి!")
-                        
+                st.warning("దయచేసి మీ ప్రాజెక్ట్ కోసం కింద ఉన్న బాక్స్‌లో ఏదైనా ప్రాంప్ట్ టైప్ చేయండి!")
+                            
