@@ -2,108 +2,165 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 from gtts import gTTS
+from moviepy.editor import ImageClip, AudioFileClip
 import os
-import tempfile
 
-# 1. Page Configuration (ఇది ఎప్పుడూ మొదటి లైన్లోనే ఉండాలి)
-st.set_page_config(
-    page_title="ఆశీర్వాద్ AI - మల్టీమీడియా స్టూడియో",
-    page_icon="🎬",
-    layout="wide"
+# 1. పేజీ కాన్ఫిగరేషన్ మరియు గూగుల్ ఫ్లో లాంటి డార్క్ థీమ్ స్టైలింగ్
+st.set_page_config(page_title="Google Flow - AI Creative Studio", page_icon="🎬", layout="wide")
+
+# కస్టమ్ CSS ద్వారా గూగుల్ ఫ్లో లాంటి డార్క్ స్క్రీన్ డిజైన్ చేయడం
+st.markdown("""
+    <style>
+    body { background-color: #0F0F0F; color: #FFFFFF; }
+    .stApp { background-color: #0F0F0F; }
+    .sidebar .sidebar-content { background-color: #1A1A1A; }
+    div.stButton > button:first-child { background-color: #333333; color: white; border-radius: 10px; border: 1px solid #444; }
+    div.stButton > button:first-child:hover { background-color: #444444; border-color: #555; }
+    .card { background-color: #1E1E1E; padding: 15px; border-radius: 12px; border: 1px solid #2D2D2D; text-align: center; }
+    </style>
+""", unsafe_allow_html=True)
+
+# 2. సైడ్‌బార్ కాన్ఫిగరేషన్ (గూగుల్ ఫ్లో లేఅవుట్ లాగా)
+st.sidebar.title("Google Flow 🎬")
+st.sidebar.caption("AI Creative Studio")
+st.sidebar.write("---")
+
+# సైడ్‌బార్ మెనూ ఆప్షన్స్
+menu_choice = st.sidebar.radio(
+    "Explore Tools",
+    ["📁 All Media", "👤 Characters", "🌄 Scenes", "🛠️ Tools"]
 )
 
-# Initialize Gemini API using Streamlit Secrets
-try:
-    api_key = st.secrets["GEMINI_API_KEY"]
-    genai.configure(api_key=api_key)
-    # మోడల్ నేమ్ సరిగ్గా సెట్ చేయడం
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    api_ready = True
-except Exception as e:
-    api_ready = False
+st.sidebar.write("---")
+# గూగుల్ అకౌంట్ మరియు క్రెడిట్స్ బాక్స్ (స్క్రీన్‌షాట్ 5 లాగా)
+st.sidebar.subheader("👤 మీ ప్రొఫైల్")
+st.sidebar.info("🪙 1,050 Google Flow Credits Available")
+api_key = st.sidebar.text_input("Gemini API Key ఇవ్వండి:", type="password")
 
-# App Header
-st.title("🎬 ఆశీర్వాద్ AI - ఆల్-ఇన్-వన్ మల్టీమీడియా స్టూడియో")
-st.write("స్టోరీలు, ఫోటో విశ్లేషణలు మరియు వాయిస్ ఓవర్లను సులభంగా సృష్టించుకోండి.")
-
-if not api_ready:
-    st.error("⚠️ Streamlit Secrets లో `GEMINI_API_KEY` సెట్ చేయబడి లేదు. దయచేసి సెట్టింగ్స్‌లో దీన్ని యాడ్ చేయండి.")
+# API Key చెకింగ్
+if not api_key:
+    st.warning("⚠️ యాప్ రన్ అవ్వడానికి సైడ్‌బార్‌లో మీ Gemini API Key ని ఎంటర్ చేయండి.")
 else:
-    # Sidebar Menu
-    st.sidebar.title("🌟 ఆశీర్వాద్ మెనూ")
-    feature_choice = st.sidebar.selectbox("ఫ్యూచర్ ఎంచుకోండి:", [
-        "🏠 హోమ్ & డ్యాష్‌బోర్డ్",
-        "📝 Feature 1: AI స్టోరీస్ & స్క్రిప్ట్స్", 
-        "🖼️ Feature 2: Google Flow విజువల్ స్టూడియో", 
-        "🎙️ Feature 3: వాయిస్ ఓవర్ & ఆడియో"
-    ])
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-1.5-flash")
 
-    if feature_choice == "🏠 హోమ్ & డ్యాష్‌బోర్డ్":
-        st.subheader("స్వాగతం, ఆశీర్వాదం గారు! 🙏")
-        st.info("మీ ప్రాజెక్ట్‌ల కోసం అన్ని మల్టీమీడియా ఫీచర్లు ఇక్కడ అందుబాటులో ఉన్నాయి.")
+    # సెషన్ స్టేట్స్ సెటప్
+    if "project_step" not in st.session_state:
+        st.session_state.project_step = "dashboard"
+    if "selected_char" not in st.session_state:
+        st.session_state.selected_char = "None"
 
-    elif feature_choice == "📝 Feature 1: AI స్టోరీస్ & స్క్రిప్ట్స్":
-        st.subheader("📝 క్రియేటివ్ స్టోరీ మరియు స్క్రిప్ట్ జనరేటర్")
-        prompt = st.text_area("మీకు కావలసిన టాపిక్ లేదా ఐడియా ఇక్కడ రాయండి:")
+    # ==================== DASHBOARD / ALL MEDIA ====================
+    if menu_choice == "📁 All Media":
+        st.title("📁 My Creations & Dashboard")
+        st.write("ఇక్కడ మీ పాత ప్రాజెక్ట్స్ మరియు కొత్త ప్రాజెక్ట్స్ మేనేజ్ చేయవచ్చు.")
         
-        if st.button("స్టోరీ జనరేట్ చేయు"):
-            if prompt:
-                with st.spinner("జనరేట్ అవుతోంది..."):
-                    try:
-                        response = model.generate_content(prompt)
-                        st.success("విజయవంతంగా జనరేట్ చేయబడింది!")
-                        st.write(response.text)
-                    except Exception as e:
-                        st.error(f"ఎర్రర్ ఏర్పడింది: {e}")
-            else:
-                st.warning("దయచేసి ఏదైనా టెక్స్ట్ రాయండి.")
+        # 'New Project' బటన్ (స్క్రీన్‌షాట్ 1 & 5 లాగా)
+        if st.button("➕ New Project (కొత్త ప్రాజెక్ట్ ప్రారంభించు)", use_container_width=True):
+            st.session_state.project_step = "create"
+            st.rerun()
 
-    elif feature_choice == "🖼️ Feature 2: Google Flow విజువల్ స్టూడియో":
-        st.subheader("🖼️ Google Flow స్టైల్ ఫోటో & విజువల్ అనాలిసిస్")
-        st.write("మీ ఫోటోలను అప్‌లోడ్ చేసి వాటిపై AI సహాయంతో విశ్లేషణ చేయండి మరియు స్క్రిప్ట్స్ తయారు చేసుకోండి.")
+        st.write("---")
+        st.subheader("ఇటీవలి ప్రాజెక్ట్స్ (Recent Creations)")
         
-        uploaded_file = st.file_uploader("ఫోటో అప్‌లోడ్ చేయండి:", type=["jpg", "jpeg", "png"])
+        # డెమో గ్రిడ్ లేఅవుట్
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown('<div class="card"><strong>Project_01.mp4</strong><br><p style="color:gray;">Sept 14 - 00:05</p></div>', unsafe_allow_html=True)
+        with col2:
+            st.markdown('<div class="card"><strong>Character_Pose.png</strong><br><p style="color:gray;">Sept 09 - 19:56</p></div>', unsafe_allow_html=True)
+        with col3:
+            st.markdown('<div class="card"><strong>Scene_Audio.mp3</strong><br><p style="color:gray;">Sept 05 - 10:41</p></div>', unsafe_allow_html=True)
+
+    # ==================== CHARACTERS MENU ====================
+    elif menu_choice == "👤 Characters":
+        st.title("👤 Build & Reuse Characters")
+        st.write("వీడియోల కోసం కింద ఉన్న శాంపిల్ క్యారెక్టర్లలో ఒకదానిని ఎంచుకోండి (స్క్రీన్‌షాట్ 3 లాగా):")
         
-        if uploaded_file is not None:
-            image = Image.open(uploaded_file)
-            st.image(image, caption="అప్‌లోడ్ చేసిన ఇమేజ్", use_column_width=True)
+        char_cols = st.columns(3)
+        with char_cols[0]:
+            st.markdown('<div class="card"><strong>The Eccentric</strong><br><p style="color:gray;">Unforgettable quirky humans.</p></div>', unsafe_allow_html=True)
+            if st.button("Select Eccentric"): st.session_state.selected_char = "The Eccentric"
+        with char_cols[1]:
+            st.markdown('<div class="card"><strong>The Professional</strong><br><p style="color:gray;">Clean cut, well spoken, competent.</p></div>', unsafe_allow_html=True)
+            if st.button("Select Professional"): st.session_state.selected_char = "The Professional"
+        with char_cols[2]:
+            st.markdown('<div class="card"><strong>The Wildcard</strong><br><p style="color:gray;">Beyond human, anything can be character.</p></div>', unsafe_allow_html=True)
+            if st.button("Select Wildcard"): st.session_state.selected_char = "The Wildcard"
             
-            user_query = st.text_input("ఈ ఫోటో గురించి AI ని ఏమి అడగాలనుకుంటున్నారు? (ఉదా: ఈ డిజైన్ గురించి వివరించండి)")
-            
-            if st.button("విజువల్ విశ్లేషించు"):
-                if user_query:
-                    with st.spinner("విశ్లేషిస్తోంది..."):
-                        try:
-                            response = model.generate_content([image, user_query])
-                            st.success("విశ్లేషణ పూర్తి!")
-                            st.write(response.text)
-                        except Exception as e:
-                            st.error(f"ఎర్రర్ ఏర్పడింది: {e}")
-                else:
-                    st.warning("దయచేసి సరైన ప్రశ్న ఇవ్వండి.")
+        st.success(f"ప్రస్తుతం ఎంచుకున్న క్యారెక్టర్: **{st.session_state.selected_char}**")
 
-    elif feature_choice == "🎙️ Feature 3: వాయిస్ ఓవర్ & ఆడియో":
-        st.subheader("🎙️ టెక్స్ట్ నుండి వాయిస్ ఓవర్ (TTS)")
-        tts_text = st.text_area("ఆడియోగా మార్చవలసిన టెక్స్ట్ ఇక్కడ రాయండి:")
-        lang_choice = st.selectbox("భాషను ఎంచుకోండి:", ["te", "en", "hi"])
+    # ==================== SCENES / TOOLS (CREATION PROCESS) ====================
+    else:
+        st.session_state.project_step = "create"
 
-        if st.button("వాయిస్ క్రియేట్ చేయు"):
-            if tts_text:
-                with st.spinner("ఆడియో తయారవుతోంది..."):
+    # ==================== NEW PROJECT CREATION FLOW ====================
+    if st.session_state.project_step == "create":
+        st.write("---")
+        st.title("🎬 AI Creative Studio - Project Flow")
+        st.write(f"🧬 యాక్టివ్ క్యారెక్టర్: **{st.session_state.selected_char}**")
+
+        # ఇన్‌పుట్ సెక్షన్
+        user_prompt = st.text_area("మీ స్టోరీ లేదా ప్రాంప్ట్ రాయండి (Describe your character/scene):", 
+                                   placeholder="ఉదాహరణకు: ఈ క్యారెక్టర్ అడవిలో నడుస్తూ ఒక మ్యాజిక్ బాక్స్ చూసింది అని తెలుగులో ఒక చిన్న కథ చెప్పి వీడియో చేయి...")
+        
+        uploaded_file = st.file_uploader("క్యారెక్టర్ లేదా సీన్ ఇమేజ్ అప్‌లోడ్ చేయండి (Start creating or drop media):", type=["jpg", "png", "jpeg"])
+        
+        if uploaded_file:
+            img = Image.open(uploaded_file)
+            st.image(img, caption="ప్రాజెక్ట్ ఇమేజ్", width=300)
+
+        # మల్టీమీడియా జనరేషన్ బటన్
+        if st.button("Generate Audio & Video 🚀", use_container_width=True):
+            if user_prompt.strip():
+                with st.spinner("గూగుల్ ఫ్లో లాజిక్ ప్రకారం AI రెస్పాన్స్ మరియు ఆడియో/వీడియో ఫైల్స్ తయారవుతున్నాయి... ⏳"):
                     try:
-                        tts = gTTS(text=tts_text, lang=lang_choice)
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
-                            temp_path = fp.name
-                            tts.save(temp_path)
+                        # 1. Gemini AI టెక్స్ట్ జనరేషన్
+                        full_prompt = [f"Character Style: {st.session_state.selected_char}. Prompt: {user_prompt}"]
+                        if uploaded_file:
+                            full_prompt.append(img)
                         
-                        st.audio(temp_path, format="audio/mp3")
-                        st.success("వాయిస్ ఓవర్ సిద్ధంగా ఉంది!")
-                    except Exception as e:
-                        st.error(f"ఎర్రర్ ఏర్పడింది: {e}")
-            else:
-                st.warning("దయచేసి టెక్స్ట్ ఎంటర్ చేయండి.")
+                        response = model.generate_content(full_prompt)
+                        ai_text = response.text
+                        
+                        st.markdown("### 📝 Generated Script:")
+                        st.write(ai_text)
 
-# Footer
-st.markdown("---")
-st.markdown("**Created with ❤️ by ఆశీర్వాదం | Powered by Google Gemini API**")
-            
+                        # 2. ఆడియో జనరేషన్ (gTTS ద్వారా - మొదటి 300 అక్షరాలు)
+                        short_text = ai_text[:300]
+                        # తెలుగు అక్షరాలు ఉంటే తెలుగు వాయిస్ లేదంటే ఇంగ్లీష్ వాయిస్
+                        tts_lang = 'te' if any(chr(0x0C00) <= c <= chr(0x0C7F) for c in short_text) else 'en'
+                        
+                        tts = gTTS(text=short_text, lang=tts_lang)
+                        audio_path = "flow_audio.mp3"
+                        tts.save(audio_path)
+                        
+                        st.markdown("### 🔊 AI Voice-Over (Audio):")
+                        st.audio(audio_path, format="audio/mp3")
+
+                        # 3. వీడియో జనరేషన్ (moviepy ద్వారా ఇమేజ్ + ఆడియో కలపడం)
+                        st.markdown("### 🎬 Final Video Output:")
+                        video_path = "flow_video.mp4"
+                        
+                        if uploaded_file:
+                            img.save("temp_flow_img.jpg")
+                            image_clip = ImageClip("temp_flow_img.jpg")
+                        else:
+                            image_clip = ImageClip(size=(720, 480), color=(15, 15, 15)) # డార్క్ బ్యాక్‌గ్రౌండ్
+                        
+                        audio_clip = AudioFileClip(audio_path)
+                        video_clip = image_clip.set_audio(audio_clip).set_duration(audio_clip.duration)
+                        
+                        # ఫాస్ట్ రెండరింగ్ కోసం fps=10 పెట్టడం జరిగింది
+                        video_clip.write_videofile(video_path, fps=10, codec="libx264", audio_codec="aac", logger=None)
+                        st.video(video_path)
+                        
+                        # క్లీనప్
+                        audio_clip.close()
+                        video_clip.close()
+                        st.success("✨ గూగుల్ ఫ్లో ప్రాజెక్ట్ సక్సెస్ఫుల్‌గా పూర్తయింది!")
+
+                    except Exception as e:
+                        st.error(f"ఎర్రర్ వచ్చింది: {e}")
+            else:
+                st.warning("దయచేసి మీ ప్రాజెక్ట్ కోసం కింద ఉన్న బాక్స్‌లో ఏదైనా ప్రాంప్ట్ టైప్ చేయండి!")
