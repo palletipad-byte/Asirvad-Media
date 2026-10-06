@@ -19,7 +19,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 2. సైడ్‌‌బార్ కాన్ఫిగరేషన్
+# 2. సైడ్‌బార్ కాన్ఫిగరేషన్
 st.sidebar.title("Google Flow 🎬")
 st.sidebar.caption("AI Creative Studio")
 st.sidebar.write("---")
@@ -40,8 +40,8 @@ if not api_key:
 else:
     try:
         genai.configure(api_key=api_key)
-        # ఫోటో విశ్లేషణకు సరిగ్గా సరిపోయే మోడల్
-        model = genai.GenerativeModel("gemini-pro-vision")
+        # మీరు చూపించిన స్క్రీన్‌షాట్ ప్రకారం 'gemini-3.8-flash' మోడల్ సెట్ చేయబడింది
+        model = genai.GenerativeModel("gemini-3.8-flash")
         api_ready = True
     except Exception as e:
         api_ready = False
@@ -153,4 +153,4 @@ if 'api_ready' in locals() and api_ready:
                         st.error(f"ఎర్రర్ వచ్చింది: {e}")
             else:
                 st.warning("దయచేసి మీ ప్రాజెక్ట్ కోసం కింద ఉన్న బాక్స్‌లో ఏదైనా ప్రాంప్ట్ టైప్ చేయండి!")
-        
+    
